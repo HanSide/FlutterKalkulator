@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:math_expressions/math_expressions.dart';
 void main(){
   runApp(KalkulatorApp());
 }
@@ -35,13 +35,40 @@ class _KalkulatorPageState extends State<KalkulatorPage>{
   final TextEditingController _angka1 = TextEditingController();
   final TextEditingController _angka2 = TextEditingController();
   String _hasil = "";
+  String _input = "";
+
+  final List<String> tombol = 
+  ["7","8","9","/",
+  "4","5","6","*",
+  "1","2","3","-",
+  "C","0","=","+"];
 
 void _reset(){
   _angka1.clear();
   _angka2.clear();                  
   setState(() {
     _hasil = "";
+    _input = "";
   });
+}
+
+void _hitungEkspresi(){
+Parser p = Parser();
+try{
+  Expression exp = p.parse (_input);
+  ContextModel  cm = ContextModel();
+  double hasil = exp.evaluate(EvaluationType.REAL, cm);
+  setState(() {
+    _hasil = "$_input = $hasil ";
+    _input = "";
+      });
+} catch (e){
+  setState(() {
+    _hasil = "Format Salah";
+  });
+}
+
+
 }
 
 void _hitung(String operator) {
@@ -77,130 +104,67 @@ void _hitung(String operator) {
 return Scaffold(
     appBar : AppBar(title : Text('Kalkulator Flutter')),
     body : Padding(
-      padding: EdgeInsets.all(20.0),
-      child : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller : _angka1,
-            keyboardType : TextInputType.number,
-            decoration: InputDecoration(
-              labelText: "Masukkan Angka Pertama",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-              filled: true,
-              fillColor: Colors.teal.shade50,
+        padding: EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _input,
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
-          ),
-
-          SizedBox(height: 20),
-          TextField(
-            controller : _angka2,
-            keyboardType : TextInputType.number,
-              decoration: InputDecoration(
-              labelText: "Masukkan Angka Kedua",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-              filled: true,
-              fillColor: Colors.teal.shade50,
-            ),
-            ),
-          
-
-          SizedBox(height: 20),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-
-              ElevatedButton(
-                onPressed: () => _hitung('+'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                child: Text('+', style: TextStyle(fontSize: 12)),
+            SizedBox(height: 10,),
+            Text(
+              _hasil,
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
-
-              ElevatedButton(
-                onPressed: () => _hitung('-'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                child: Text('-', style: TextStyle(fontSize: 12)),
-              ),
-
-              ElevatedButton(
-                onPressed: () => _hitung('*'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                child: Text('*', style: TextStyle(fontSize: 12)),
-              ),
-
-              ElevatedButton(
-                onPressed: () => _hitung('/'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-                child: Text('/', style: TextStyle(fontSize: 12)),
-              ),
-
              
-            ],
-          ),
 
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _reset,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text('Reset'),
-          ),
-          if (_hasil.isNotEmpty)
-          AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            padding: EdgeInsets.all(16.0),
-            margin: EdgeInsets.only(top: 20),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child : Center(
-              child: Text(
-               _hasil,
-              style: TextStyle(
-                fontSize: 24, 
-                color: Colors.teal[700],
-                fontWeight: FontWeight.bold
+            SizedBox(height: 20),
+            Expanded(
+              child : GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10, 
+                )
+                ,itemCount: tombol.length,
+                itemBuilder: (context, index) {
+                  final label = tombol[index];
+                  return ElevatedButton(
+                    onPressed: () {
+                      if (label == "C"){
+                        _reset();
+                      }
+                      else if (label == "="){
+                        _hitungEkspresi();
+                      }
+                      else {
+                        setState(() {
+                        _input += label;
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ["/", "*", "-", "+"].contains(label) ? Colors.teal : (label == "C" ? Colors.red : Colors.grey[200]),
+                      foregroundColor: ["/","*","-","+"].contains(label) ? Colors.white : (label == "C" ? Colors.white : Colors.black),
+                      textStyle: TextStyle(fontSize: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  );
+                  
+                }
                 ),
-             )
-            ),
-          )
+              )
           ],
+
+          
       )
-    )
-);
+));
   }
 }
